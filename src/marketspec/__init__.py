@@ -1,22 +1,23 @@
 from __future__ import annotations
 
+import warnings
 from typing import Optional, cast
 
 from . import exchanges as _exchanges  # auto-register resolvers on import
 from .registry import resolve as resolve_symbol
-from .registry import resolve_venue_symbol
+from .registry import resolve_venue_symbol  # kept for compatibility
 from .types import Expiry, OptionSide, Spec, Type
 from .unified import parse_unified_symbol, set_stables
 
 __all__ = [
     "venue_symbol",
     "parse",
-    "parse_unified_symbol",
+    "parse_unified_symbol",  # deprecated but exported for compat
     "resolve_symbol",
-    "resolve_venue_symbol",
+    "resolve_venue_symbol",  # deprecated but exported for compat
     "Spec",
     "set_stables",
-    "_exchanges",
+    "_exchanges",  # intentionally exported to mark side-effect import as used
 ]
 
 
@@ -43,12 +44,16 @@ def venue_symbol(exchange: str, unified: str) -> str:
         venue_symbol("bybit",   "BTC/USD:USD-20251227")   -> "BTCUSD_20251227"
         venue_symbol("binance", "ETH-20251226-2500-C")    -> "ETH-20251226-2500-C"
     """
-    spec = _spec_from_dict(parse_unified_symbol(unified))
-    return resolve_venue_symbol(exchange=exchange, spec=spec)
+    spec = parse(unified)
+    return resolve_symbol("binance" if exchange is None else exchange, spec)
+
 
 def parse(unified: str) -> Spec:
     """
     Stable API: parse a unified symbol string into a Spec.
-    Back-compat note: parse_unified_symbol() continues to return a dict.
+    Back-compat note: parse_unified_symbol() continues to return a dict but is deprecated.
     """
-    return _spec_from_dict(parse_unified_symbol(unified))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        d = parse_unified_symbol(unified)
+    return _spec_from_dict(d)

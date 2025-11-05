@@ -1,14 +1,21 @@
 from __future__ import annotations
 
 import re
+import warnings
 from typing import Callable
 
 from .types import Spec
 
-__all__ = ["register", "resolve", "resolve_venue_symbol", "Resolver"]
+__all__ = ["register", "resolve", "resolve_venue_symbol", "Resolver", "ResolveError"]
+
+
+class ResolveError(ValueError):
+    """Resolution failed for a venue symbol."""
+
 
 Resolver = Callable[[Spec], str]
 _REGISTRY: dict[str, Resolver] = {}
+# Venue symbol validation (non-option). Hyphen remains disallowed by design.
 _SYM_SIMPLE = re.compile(r"^[A-Z0-9_]+$")
 _SYM_OPTION = re.compile(r"^[A-Z0-9]+-\d{8}-[0-9]+(?:\.[0-9]+)?-[CP]$")
 
@@ -30,14 +37,22 @@ def resolve(exchange: str, spec: Spec) -> str:
     try:
         fn = _REGISTRY[exchange.lower()]
     except KeyError as e:
-        raise ValueError(f"No symbol resolver for exchange={exchange}") from e
+        raise ResolveError(f"No symbol resolver for exchange={exchange}") from e
     sym = fn(spec).strip()
     if not sym:
-        raise ValueError(f"Empty symbol for exchange={exchange} with spec={spec}")
+        raise ResolveError(f"Empty symbol for exchange={exchange} with spec={spec}")
     if not (_SYM_SIMPLE.fullmatch(sym) or _SYM_OPTION.fullmatch(sym)):
-        raise ValueError(f"Illegal characters in symbol: {sym!r}")
+        raise ResolveError(f"Illegal characters in symbol: {sym!r}")
     return sym
 
 
 def resolve_venue_symbol(*, exchange: str, spec: Spec) -> str:
+    """
+    Deprecated. Use resolve(exchange, spec) or marketspec.resolve_symbol().
+    """
+    warnings.warn(
+        "resolve_venue_symbol() is deprecated. Use resolve() or marketspec.resolve_symbol().",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return resolve(exchange, spec)

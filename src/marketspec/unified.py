@@ -1,19 +1,48 @@
 from __future__ import annotations
 
 import re
+import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation, localcontext
 from typing import Union
 
-__all__ = ["parse_unified_symbol", "_yyyymmdd", "_deribit_date", "set_stables", "_format_strike"] 
+__all__ = [
+    "parse_unified_symbol",
+    "_yyyymmdd",
+    "_deribit_date",
+    "set_stables",
+    "override_stables",
+    "_format_strike",
+]
 
 Dateish = Union[str, date, datetime]
 _STABLES: set[str] = {"USDT", "USDC", "DAI", "FDUSD", "TUSD"}
 
+
 def set_stables(stables: set[str]) -> None:
-    """Override the stable-coin set used for linear detection."""
+    """Override the stable-coin set used for linear detection. Global."""
     _STABLES.clear()
     _STABLES.update(x.upper() for x in stables)
+
+
+@contextmanager
+def override_stables(stables: set[str]) -> Iterator[None]:
+    """
+    Temporarily override the stable-coin set in a controlled scope.
+
+    Example:
+        with override_stables({"USDT", "USDC"}):
+            ...
+    """
+    prev = set(_STABLES)
+    try:
+        set_stables(stables)
+        yield
+    finally:
+        set_stables(prev)
+
 
 def parse_unified_symbol(s: str) -> dict[str, object | None]:
     """
@@ -22,11 +51,19 @@ def parse_unified_symbol(s: str) -> dict[str, object | None]:
       swap   BASE/QUOTE:SETTLE
       future BASE/QUOTE:SETTLE-YYYYMMDD
       option BASE-YYYYMMDD-STRIKE-C|P
-    Returns a dict for backward compatibility with existing tests.
+
+    Returns a dict for backward compatibility with existing callers.
     """
+    # deprecation notice: prefer marketspec.parse() -> Spec
+    warnings.warn(
+        "parse_unified_symbol() is deprecated. Use marketspec.parse() which returns Spec.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     s = s.strip().upper()
 
-    # Option: BASE-YYYYMMDD-STRIKE-C|P (strike supports 1e-3)
+    # Option: BASE-YYYYMMDD-STRIKE-C|P (strike supports 1e-3 and scientific notation)
     m = re.fullmatch(
         r"([A-Z0-9]+)-(\d{8})-([0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)\-([CP])",
         s,
@@ -111,6 +148,7 @@ def _deribit_date(expiry: Dateish) -> str:
     month = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     mm = month[int(m) - 1]
     return f"{int(d):02d}{mm}{y[2:]}"
+
 
 def _format_strike(x: object) -> str:
     """
