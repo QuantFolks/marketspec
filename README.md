@@ -13,11 +13,15 @@ pip install marketspec
 
 ## Quick start
 ```python
-from marketspec import venue_symbol
+from marketspec import venue_symbol, parse, resolve_symbol
 
 print(venue_symbol("binance", "BTC/USDT:USDT"))          # BTCUSDT
 print(venue_symbol("bybit",   "BTC/USD:USD-20251227"))   # BTCUSD_20251227
 print(venue_symbol("binance", "ETH-20251226-2500-C"))    # ETH-20251226-2500-C
+
+# Stable parser + resolver
+s = parse("BTC/USDT:USDT")       # -> Spec
+print(resolve_symbol("binance", s))  # BTCUSDT
 ```
 
 ## Grammar

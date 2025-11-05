@@ -3,13 +3,16 @@ from __future__ import annotations
 from typing import Optional, cast
 
 from . import exchanges as _exchanges  # auto-register resolvers on import
+from .registry import resolve as resolve_symbol
 from .registry import resolve_venue_symbol
 from .types import Expiry, OptionSide, Spec, Type
 from .unified import parse_unified_symbol, set_stables
 
 __all__ = [
     "venue_symbol",
+    "parse",
     "parse_unified_symbol",
+    "resolve_symbol",
     "resolve_venue_symbol",
     "Spec",
     "set_stables",
@@ -42,3 +45,10 @@ def venue_symbol(exchange: str, unified: str) -> str:
     """
     spec = _spec_from_dict(parse_unified_symbol(unified))
     return resolve_venue_symbol(exchange=exchange, spec=spec)
+
+def parse(unified: str) -> Spec:
+    """
+    Stable API: parse a unified symbol string into a Spec.
+    Back-compat note: parse_unified_symbol() continues to return a dict.
+    """
+    return _spec_from_dict(parse_unified_symbol(unified))
