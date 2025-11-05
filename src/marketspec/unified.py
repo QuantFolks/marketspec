@@ -9,7 +9,6 @@ from decimal import Decimal, InvalidOperation, localcontext
 from typing import Union
 
 __all__ = [
-    "parse_unified_symbol",
     "_yyyymmdd",
     "_deribit_date",
     "set_stables",
@@ -44,22 +43,15 @@ def override_stables(stables: set[str]) -> Iterator[None]:
         set_stables(prev)
 
 
-def parse_unified_symbol(s: str) -> dict[str, object | None]:
+def _parse_to_dict(s: str) -> dict[str, object | None]:
     """
     Grammar:
       spot   BASE/QUOTE
       swap   BASE/QUOTE:SETTLE
       future BASE/QUOTE:SETTLE-YYYYMMDD
       option BASE-YYYYMMDD-STRIKE-C|P
-
-    Returns a dict for backward compatibility with existing callers.
+    Returns a dict used by marketspec.parse() to build Spec.
     """
-    # deprecation notice: prefer marketspec.parse() -> Spec
-    warnings.warn(
-        "parse_unified_symbol() is deprecated. Use marketspec.parse() which returns Spec.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
 
     s = s.strip().upper()
 
@@ -159,6 +151,8 @@ def _format_strike(x: object) -> str:
         with localcontext() as ctx:
             ctx.prec = 28
             d = Decimal(str(x)).normalize()
+            if d <= 0:
+                raise ValueError("strike must be > 0")
             s = format(d, "f")
             # Only trim zeros after the decimal point.
             if "." in s:

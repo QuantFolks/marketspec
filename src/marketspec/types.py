@@ -5,6 +5,7 @@ from datetime import date, datetime
 from typing import Literal, Union
 
 from .unified import _format_strike, _yyyymmdd
+import re
 
 __all__ = ["Spec", "Type", "OptionSide", "Expiry"]
 
@@ -26,22 +27,34 @@ class Spec:
     week: str | None = None
 
     def __post_init__(self) -> None:
+        alnum = re.compile(r"^[A-Z0-9]+$")
         object.__setattr__(self, "base", self.base.upper())
         object.__setattr__(self, "quote", self.quote.upper())
+        if not alnum.fullmatch(self.base) or not alnum.fullmatch(self.quote):
+            raise ValueError("base/quote must be alphanumeric A-Z0-9")
         if self.settle:
             object.__setattr__(self, "settle", self.settle.upper())
+            if not alnum.fullmatch(self.settle):
+                raise ValueError("settle must be alphanumeric A-Z0-9")
         if self.option:
             side = str(self.option).upper()
             if side not in {"C", "P"}:
                 raise ValueError("option must be C or P")
             object.__setattr__(self, "option", side)
-        if self.type in ("swap", "future") and self.settle is None:
-            raise ValueError("swap/future require settle")
+        if self.type in ("swap", "future"):
+            if self.settle is None:
+                raise ValueError("swap/future require settle")
+            if self.linear is None:
+                raise ValueError("swap/future require linear flag")
         if self.type == "future" and self.expiry is None:
             raise ValueError("future requires expiry")
         if self.type == "option":
             if not (self.expiry and self.strike and self.option):
                 raise ValueError("option requires expiry,strike,option")
+            # Validate date now to fail early even before resolution.
+            _ = _yyyymmdd(self.expiry)
+            # Positive strike required. Also canonicalize via formatter.
+            _ = _format_strike(self.strike)
 
     # Convenience for round-tripping in tests and logs.
     def unified(self) -> str:

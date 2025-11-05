@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0
+- Removed deprecated APIs:
+  - `parse_unified_symbol()` removed. Use `parse() -> Spec`.
+  - `resolve_venue_symbol()` removed. Use `resolve_symbol()`.
+- Added stricter validation:
+  - `Spec`: alphanumeric checks for `base/quote/settle`, require `linear` for swap/future.
+  - `option` strike must be `> 0`.
+- No runtime behavior change for Binance/Bybit resolvers.
+
 ## 0.3.0
 - Deprecate parse_unified_symbol() in favor of parse() which returns Spec. Still exported and works, but emits DeprecationWarning.
 - Deprecate resolve_venue_symbol() in favor of resolve_symbol() (alias of registry.resolve). Still exported and works, but emits DeprecationWarning.

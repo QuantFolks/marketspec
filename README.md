@@ -61,10 +61,6 @@ with override_stables({"USDT", "USDC"}):
 - Parsing errors raise `ValueError`.
 - Resolution errors raise `marketspec.registry.ResolveError` (subclasses `ValueError`).
 
-## Deprecations
-- `parse_unified_symbol()` is deprecated. Use `parse() -> Spec`. Still exported and functional, emits `DeprecationWarning`.
-- `resolve_venue_symbol()` is deprecated. Use `resolve_symbol()`.
-
 ## Supported venues
 - `binance`
 - `bybit`

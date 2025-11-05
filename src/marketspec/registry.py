@@ -6,7 +6,7 @@ from typing import Callable
 
 from .types import Spec
 
-__all__ = ["register", "resolve", "resolve_venue_symbol", "Resolver", "ResolveError"]
+__all__ = ["register", "resolve", "Resolver", "ResolveError"]
 
 
 class ResolveError(ValueError):
@@ -45,14 +45,3 @@ def resolve(exchange: str, spec: Spec) -> str:
         raise ResolveError(f"Illegal characters in symbol: {sym!r}")
     return sym
 
-
-def resolve_venue_symbol(*, exchange: str, spec: Spec) -> str:
-    """
-    Deprecated. Use resolve(exchange, spec) or marketspec.resolve_symbol().
-    """
-    warnings.warn(
-        "resolve_venue_symbol() is deprecated. Use resolve() or marketspec.resolve_symbol().",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return resolve(exchange, spec)
