@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1
+- tiny bug-fix, no API change, no new feature. So patch.
+
 ## 1.0.0
 - Removed deprecated APIs:
   - `parse_unified_symbol()` removed. Use `parse() -> Spec`.

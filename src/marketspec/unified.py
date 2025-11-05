@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date, datetime

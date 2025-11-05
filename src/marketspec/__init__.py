@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Optional, cast
 
 from . import exchanges as _exchanges  # auto-register resolvers on import

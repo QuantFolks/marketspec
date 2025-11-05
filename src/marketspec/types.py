@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Literal, Union
 
 from .unified import _format_strike, _yyyymmdd
-import re
 
 __all__ = ["Spec", "Type", "OptionSide", "Expiry"]
 
@@ -30,7 +30,9 @@ class Spec:
         alnum = re.compile(r"^[A-Z0-9]+$")
         object.__setattr__(self, "base", self.base.upper())
         object.__setattr__(self, "quote", self.quote.upper())
-        if not alnum.fullmatch(self.base) or not alnum.fullmatch(self.quote):
+        if not alnum.fullmatch(self.base):
+            raise ValueError("base/quote must be alphanumeric A-Z0-9")
+        if self.type != "option" and not alnum.fullmatch(self.quote):
             raise ValueError("base/quote must be alphanumeric A-Z0-9")
         if self.settle:
             object.__setattr__(self, "settle", self.settle.upper())
